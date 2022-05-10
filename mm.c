@@ -279,17 +279,20 @@ static void* find_fit(size_t asize) {
 }
 
 /*
- * place - 요구 메모리를 할당할 수 있는 가용 블록을 할당한다. 이 때 분할이 가능하다면 분할한다.
+ * place - 요구 메모리를 할당할 수 있는 가용 블록을 할당한다.(즉 실제로 할당하는 부분이다) 이 때 분할이 가능하다면 분할한다.
  */
 static void place(void* bp, size_t asize) {
-    size_t csize = GET_SIZE(HDRP(bp));                                      // 현재 할당할 수 있는 후보 free 블록의 사이즈
+    size_t csize = GET_SIZE(HDRP(bp));                                      // 현재 할당할 수 있는 후보, 즉 실제로 할당할 free 블록의 사이즈
     
     // 분할이 가능한 경우
     // 남은 메모리가 최소한의 free 블록을 만들 수 있는 4 word가 되느냐
     // -> header/footer/payload/정렬을 위한 padding까지 총 4 word 이상이어야 한다.
     if ((csize - asize) >= (2 * DSIZE)) {                                   // 2 * DSIZE는 총 4개의 word인 셈이다. csize - asize 부분에 header, footer, payload, 정렬을 위한 padding까지 총 4개가 들어갈 수 있어야 free 블록이 된다.
+        // 앞의 블록은 할당시킨다.
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
+        
+        // 뒤의 블록은 free시킨다.
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize - asize, 0));
         PUT(FTRP(bp), PACK(csize - asize, 0));
@@ -305,11 +308,10 @@ static void place(void* bp, size_t asize) {
 /*
  * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
  */
-void *mm_realloc(void *ptr, size_t size)
-{
+void *mm_realloc(void *ptr, size_t size) {
     // 블록의 크기를 줄이는 것이면 줄이려는 size만큼으로 줄인다.
     // 블록의 크기를 늘리는 것이면 
-    // 핵심은, 이미 할당된 블록의 사이즈를 직접 건드리는 것이 아니라, 임시로 요청한 사이즈 만큼의 블록을 만들고 현재의 블록을 반환하는 것이다.
+    // 핵심은, 이미 할당된 블록의 사이즈를 직접 건드리는 것이 아니라, 요청한 사이즈 만큼의 블록을 새로 메모리 공간에 만들고 현재의 블록을 반환하는 것이다.
     // 해당 블록의 사이즈가 이 정도로 변경되었으면 좋겠다는 것이 size, 
     void *oldptr = ptr;                                                     // 크기를 조절하고 싶은 힙의 시작 포인터
     void *newptr;                                                           // 크기 조절 뒤의 새 힙의 시작 포인터
