@@ -332,16 +332,3 @@ void *mm_realloc(void *ptr, size_t size) {
     mm_free(oldptr);                                                        // 기존 oldptr은 반환한다.
     return newptr;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

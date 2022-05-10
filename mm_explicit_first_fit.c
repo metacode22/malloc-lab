@@ -81,18 +81,6 @@ team_t team = {
 #define PREC_FREEP(bp)      (*(void**)(bp))         
 #define SUCC_FREEP(bp)      (*(void**)(bp + WSIZE))
 
-void removeBlock(void *bp) {
-    // free 리스트의 첫 번째 블록을 없앨 때
-    // ex.
-    // 0x72 <-> 0x24 <-> 0x08   맨 처음, bp(free_listp)가 0x72를 가리키고 있다고 가정.
-    // 0x72 -> 0x24 <-> 0x08    PREC_FREEP(SUCC_FREEP(bp)) = NULL;
-    // 0x24 <-> 0x08            free_listp는 0x24가 되면 앞의 0x72는 이제 완전히 날라가게 된다.
-    if (bp == free_listp) {                                                 // bp가 free_listp라는 말은 free 리스트의 처음이라는 뜻이다.
-        PREC_FREEP(SUCC_FREEP(bp)) = NULL;                                  // bp가 가리키는 free 블록의 바로 다음 블록에서 이전 블록을 잇는 prec 블록의 값을 NULL로 수정하면 끊어지게 된다.
-        free_listp = SUCC_FREEP(bp);                                        // bp가 가리키는 free 블록의 바로 다음 블록이 free_listp, 즉 free 리스트의 맨 처음이 되도록 한다.
-    }
-}
-
 /* 
  * global variable & functions
  */
@@ -183,6 +171,7 @@ static void* coalesce(void* bp) {
     
     // 경우 1. 이전 블록 할당, 다음 블록 할당 - 연결시킬 수 없으니 그대로 bp를 반환한다.
     if (prev_alloc && next_alloc) {
+        putFreeBlock(bp);
         return bp;
     }
     
