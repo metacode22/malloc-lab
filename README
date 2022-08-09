@@ -1,3 +1,7 @@
+C언어의 malloc과 free를 구현하는 프로젝트입니다.
+
+구현하며 학습한 내용을 정리한 글 : https://velog.io/@metamong/%EB%84%A4%ED%8A%B8%EC%9B%8C%ED%81%AC
+
 #####################################################################
 # CS:APP Malloc Lab
 # Handout files for students
